@@ -132,7 +132,7 @@ def locations(message):
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG, filename="stonerbot.log")
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(bot.loop())
