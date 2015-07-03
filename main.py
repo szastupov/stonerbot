@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import logging
 import asyncio
 import os
@@ -12,7 +13,7 @@ LEAFLY_HEADERS = {
 }
 
 bot = TgBot(os.environ["API_TOKEN"])
-logger = logging.getLogger("leafly")
+logger = logging.getLogger("StonerBot")
 
 
 def format_strain(strain):
@@ -48,7 +49,7 @@ def leafly_strains(text):
         "sort": "rating"
     }
     data = json.dumps(params)
-    
+
     response = yield from bot.session.post(url, headers=LEAFLY_HEADERS, data=data)
     assert response.status == 200
     res = (yield from response.json())
@@ -77,7 +78,7 @@ def leafly_locations(loc):
         "take": 5
     }
     params.update(loc)
-   
+
     response = yield from bot.session.post(url, headers=LEAFLY_HEADERS, data=params)
     assert response.status == 200
     res = (yield from response.json())
@@ -85,9 +86,17 @@ def leafly_locations(loc):
     return list(map(format_store, res.get("stores", [])))
 
 
+def format_username(user):
+    parts = ["first_name", "last_name", "username"]
+    title = " ".join(filter(None, (user.get(part) for part in parts)))
+    return title
+
+
 @asyncio.coroutine
 def search_strains(message, text):
     strains = yield from leafly_strains(text)
+    user = format_username(message["from"])
+    logger.info("%s searched for '%s', found %d", user, text, len(strains))
     if len(strains) == 0:
         yield from bot.reply_to(message, "No strains were found :(")
     else:
@@ -132,7 +141,7 @@ def locations(message):
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG, filename="stonerbot.log")
+    logging.basicConfig(level=logging.INFO, filename="stonerbot.log")
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(bot.loop())
