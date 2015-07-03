@@ -51,10 +51,14 @@ def leafly_strains(text):
     data = json.dumps(params)
 
     response = yield from bot.session.post(url, headers=LEAFLY_HEADERS, data=data)
-    assert response.status == 200
-    res = (yield from response.json())
 
-    return list(map(format_strain, res["Strains"]))
+    if response.status != 200:
+        response.close()
+        logger.error("leafly returned %d for '%s'", 200, text)
+        return
+    else:
+        res = (yield from response.json())
+        return list(map(format_strain, res["Strains"]))
 
 
 def format_store(store):
@@ -95,12 +99,19 @@ def format_username(user):
 @asyncio.coroutine
 def search_strains(message, text):
     strains = yield from leafly_strains(text)
+    results = len(strains or [])
+
     user = format_username(message["from"])
-    logger.info("%s searched for '%s', found %d", user, text, len(strains))
-    if len(strains) == 0:
-        yield from bot.reply_to(message, "No strains were found :(")
+    logger.info("%s searched for '%s', found %d", user, text, results)
+
+    if not strains:
+        reply = "I have problems contacting my dealer, please come back later :("
+    elif results == 0:
+        reply = "No strains were found :("
     else:
-        yield from bot.reply_to(message, "\n\n".join(strains))
+        reply = "\n\n".join(strains)
+
+    yield from bot.reply_to(message, reply)
 
 
 @bot.command(r"/strains (.*)")
