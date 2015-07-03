@@ -54,7 +54,7 @@ def leafly_strains(text):
 
     if response.status != 200:
         response.close()
-        logger.error("leafly returned %d for '%s'", 200, text)
+        logger.error("leafly returned %d for '%s'", response.status, text)
         return
     else:
         res = (yield from response.json())
@@ -84,10 +84,14 @@ def leafly_locations(loc):
     params.update(loc)
 
     response = yield from bot.session.post(url, headers=LEAFLY_HEADERS, data=params)
-    assert response.status == 200
-    res = (yield from response.json())
 
-    return list(map(format_store, res.get("stores", [])))
+    if response.status != 200:
+        response.close()
+        logger.error("leafly returned %d for locations", response.status)
+        return []
+    else:
+        res = (yield from response.json())
+        return list(map(format_store, res.get("stores", [])))
 
 
 def format_username(user):
