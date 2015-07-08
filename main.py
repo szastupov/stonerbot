@@ -94,19 +94,13 @@ def leafly_locations(loc):
         return list(map(format_store, res.get("stores", [])))
 
 
-def format_username(user):
-    parts = ["first_name", "last_name", "username"]
-    title = " ".join(filter(None, (user.get(part) for part in parts)))
-    return title
-
-
 @asyncio.coroutine
 def search_strains(message, text):
     strains = yield from leafly_strains(text)
     results = len(strains or [])
 
-    user = format_username(message["from"])
-    logger.info("%s searched for '%s', found %d", user, text, results)
+    logger.info("%s searched for '%s', found %d",
+                message.sender, text, results)
 
     if not strains:
         reply = "I have problems contacting my dealer, please come back later :("
@@ -115,7 +109,7 @@ def search_strains(message, text):
     else:
         reply = "\n\n".join(strains)
 
-    yield from bot.reply_to(message, reply)
+    yield from message.reply(reply)
 
 
 @bot.command(r"/strains (.*)")
@@ -125,7 +119,7 @@ def strains(message, match):
 
 @bot.default
 def default(message):
-    return search_strains(message, message["text"])
+    return search_strains(message, message.text)
 
 
 @bot.command("(/start|/?help)")
@@ -141,18 +135,18 @@ If you like this bot, please rate it at: https://telegram.me/storebot?start=ston
 
 Peace ✌️
     """
-    return bot.reply_to(message, text)
+    return message.reply(text)
 
 
 @bot.location
 @asyncio.coroutine
 def locations(message):
-    loc = message["location"]
+    loc = message.location
     stores = yield from leafly_locations(loc)
     if len(stores) == 0:
-        yield from bot.reply_to(message, "There are no stores around:(")
+        yield from message.reply("There are no stores around:(")
     else:
-        yield from bot.reply_to(message, "\n\n".join(stores))
+        yield from message.reply("\n\n".join(stores))
 
 
 def main():
