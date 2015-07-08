@@ -132,6 +132,7 @@ send me your location and I will find stores near you.
 
 Powered by Leafly API (https://www.leafly.com)
 If you like this bot, please rate it at: https://telegram.me/storebot?start=stonerbot
+You can contribute or report any issues at: https://github.com/szastupov/stonerbot
 
 Peace ✌️
     """
