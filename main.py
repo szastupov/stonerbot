@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import asyncio
+import aiohttp
 import os
 import json
 
@@ -50,7 +51,7 @@ def leafly_strains(text):
     }
     data = json.dumps(params)
 
-    response = yield from bot.session.post(url, headers=LEAFLY_HEADERS, data=data)
+    response = yield from aiohttp.post(url, headers=LEAFLY_HEADERS, data=data)
 
     if response.status != 200:
         response.close()
@@ -83,7 +84,7 @@ def leafly_locations(loc):
     }
     params.update(loc)
 
-    response = yield from bot.session.post(url, headers=LEAFLY_HEADERS, data=params)
+    response = yield from aiohttp.post(url, headers=LEAFLY_HEADERS, data=params)
 
     if response.status != 200:
         response.close()
@@ -155,7 +156,6 @@ def main():
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(bot.loop())
-    bot.session.close()
 
 
 if __name__ == '__main__':
