@@ -40,8 +40,7 @@ def format_strain(strain):
     return text
 
 
-@asyncio.coroutine
-def leafly_strains(text):
+async def leafly_strains(text):
     url = "http://data.leafly.com/strains"
     params = {
         "search": text,
@@ -51,14 +50,14 @@ def leafly_strains(text):
     }
     data = json.dumps(params)
 
-    response = yield from aiohttp.post(url, headers=LEAFLY_HEADERS, data=data)
+    response = await aiohttp.post(url, headers=LEAFLY_HEADERS, data=data)
 
     if response.status != 200:
         response.close()
         logger.error("leafly returned %d for '%s'", response.status, text)
         return
     else:
-        res = (yield from response.json())
+        res = await response.json()
         return list(map(format_strain, res["Strains"]))
 
 
@@ -75,8 +74,7 @@ def format_store(store):
     return tmpl.format(flist, **store)
 
 
-@asyncio.coroutine
-def leafly_locations(loc):
+async def leafly_locations(loc):
     url = "http://data.leafly.com/locations"
     params = {
         "page": 0,
@@ -84,20 +82,19 @@ def leafly_locations(loc):
     }
     params.update(loc)
 
-    response = yield from aiohttp.post(url, headers=LEAFLY_HEADERS, data=params)
+    response = await aiohttp.post(url, headers=LEAFLY_HEADERS, data=params)
 
     if response.status != 200:
         response.close()
         logger.error("leafly returned %d for locations", response.status)
         return []
     else:
-        res = (yield from response.json())
+        res = await response.json()
         return list(map(format_store, res.get("stores", [])))
 
 
-@asyncio.coroutine
-def search_strains(message, text):
-    strains = yield from leafly_strains(text)
+async def search_strains(message, text):
+    strains = await leafly_strains(text)
     results = len(strains or [])
 
     logger.info("%s searched for '%s', found %d",
@@ -110,7 +107,7 @@ def search_strains(message, text):
     else:
         reply = "\n\n".join(strains)
 
-    yield from message.reply(reply)
+    await message.reply(reply)
 
 
 @bot.command(r"/strains (.*)")
@@ -141,14 +138,13 @@ Peace ✌️
 
 
 @bot.location
-@asyncio.coroutine
-def locations(message):
+async def locations(message):
     loc = message.location
-    stores = yield from leafly_locations(loc)
+    stores = await leafly_locations(loc)
     if len(stores) == 0:
-        yield from message.reply("There are no stores around:(")
+        await message.reply("There are no stores around:(")
     else:
-        yield from message.reply("\n\n".join(stores))
+        await message.reply("\n\n".join(stores))
 
 
 def main():
